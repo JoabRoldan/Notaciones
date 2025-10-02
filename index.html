@@ -26,9 +26,7 @@
   <div id="contenido_arbol" class="mt-4"></div>
 
   <script type="module">
-    // ==========================
     // Regex para clasificación
-    // ==========================
     const regexInfija  = /^([()\d+\-*/\s]+)$/;  
     const regexPrefija = /^([+\-/*]\s+\d+(\s+\d+)*)$/;        
     const regexPostfija= /^(\d+(\s+\d+)*\s+[+\-/*])$/;       
@@ -36,17 +34,13 @@
     const btn1   = document.getElementById("btn_generar");
     const arbol  = document.getElementById("contenido_arbol");
 
-    // ==========================
     // Utilidades
-    // ==========================
     const precedencia = op => (op === '+' || op === '-') ? 1 : (op === '*' || op === '/') ? 2 : 0;
 
     const tokenize = exp => exp.match(/\d+|[+\-*/()]/g);
 
-    // ==========================
     // INF → POST
-    // ==========================
-    function infijaToPostfija(exp) {
+    const infijaToPostfija = exp => {
       let salida = [], stack = [];
       let tokens = tokenize(exp);
       tokens.forEach(token => {
@@ -64,21 +58,17 @@
       });
       while (stack.length) salida.push(stack.pop());
       return salida.join(" ");
-    }
+    };
 
-    // ==========================
     // INF → PRE
-    // ==========================
-    function infijaToPrefija(exp) {
+    const infijaToPrefija = exp => {
       let tokens = tokenize(exp).reverse().map(t => (t === '(' ? ')' : t === ')' ? '(' : t));
       let postfija = infijaToPostfija(tokens.join(" "));
       return postfija.split(" ").reverse().join(" ");
-    }
+    };
 
-    // ==========================
     // EVALUADORES
-    // ==========================
-    function evalPostfija(exp) {
+    const evalPostfija = exp => {
       let stack = [];
       let tokens = exp.split(" ");
       tokens.forEach(t => {
@@ -94,9 +84,9 @@
         }
       });
       return stack.pop();
-    }
+    };
 
-    function evalPrefija(exp) {
+    const evalPrefija = exp => {
       let stack = [];
       let tokens = exp.split(" ").reverse();
       tokens.forEach(t => {
@@ -112,32 +102,24 @@
         }
       });
       return stack.pop();
-    }
+    };
 
-    function evalInfija(exp) {
-      // Seguridad: usar Function en lugar de eval directo
-      return Function(`"use strict"; return (${exp})`)();
-    }
+    const evalInfija = exp => Function(`"use strict"; return (${exp})`)();
 
-    // ==========================
     // EVENTO
-    // ==========================
     btn1.addEventListener("click", () => {
       arbol.innerHTML = "";
       let expresion = document.getElementById("expresion").value.trim();
 
-      // Detectar tipo (solo informativo)
       let tipo = "No válida";
       if (regexInfija.test(expresion)) tipo = "INFija";
       else if (regexPrefija.test(expresion)) tipo = "PREfija";
       else if (regexPostfija.test(expresion)) tipo = "POSTfija";
 
-      // Conversiones (partimos de infija como base)
       let infija = expresion;
       let prefija = infijaToPrefija(expresion);
       let postfija = infijaToPostfija(expresion);
 
-      // Medir tiempo y evaluar
       const medir = (fn, exp) => {
         const t0 = performance.now();
         const res = fn(exp);
@@ -148,8 +130,6 @@
       let evalInf = medir(evalInfija, infija);
       let evalPre = medir(evalPrefija, prefija);
       let evalPost= medir(evalPostfija, postfija);
-
-      // Render
       arbol.innerHTML = `
         <div class="result-box">
           <p><strong>Tipo detectado:</strong> ${tipo}</p>
