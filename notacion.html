@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Conversión y Evaluación de Notaciones</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #1a1a1a; color: #f0f0f0; }
+    .card { background-color: #2b2b2b; border-radius: 15px; }
+    .result-box { background-color: #3c3c3c; border-radius: 10px; padding: 10px; margin-top: 10px; }
+    .highlight { color: #4caf50; font-weight: bold; }
+  </style>
+</head>
+<body class="container py-4">
+
+  <h1 class="text-center mb-4">Evaluador de Notaciones (NI, NF, NP)</h1>
+
+  <div class="card p-4">
+    <div class="mb-3">
+      <label for="expresion" class="form-label">Ingrese expresión:</label>
+      <input type="text" class="form-control" id="expresion" placeholder="Ejemplo: (6+2)/(9-1)">
+    </div>
+    <button id="btn_generar" class="btn btn-success w-100">Procesar</button>
+  </div>
+
+  <div id="contenido_arbol" class="mt-4"></div>
+
+  <script type="module">
+    // ==========================
+    // Regex para clasificación
+    // ==========================
+    const regexInfija  = /^([()\d+\-*/\s]+)$/;  
+    const regexPrefija = /^([+\-/*]\s+\d+(\s+\d+)*)$/;        
+    const regexPostfija= /^(\d+(\s+\d+)*\s+[+\-/*])$/;       
+
+    const btn1   = document.getElementById("btn_generar");
+    const arbol  = document.getElementById("contenido_arbol");
+
+    // ==========================
+    // Utilidades
+    // ==========================
+    const precedencia = op => (op === '+' || op === '-') ? 1 : (op === '*' || op === '/') ? 2 : 0;
+
+    const tokenize = exp => exp.match(/\d+|[+\-*/()]/g);
+
+    // ==========================
+    // INF → POST
+    // ==========================
+    function infijaToPostfija(exp) {
+      let salida = [], stack = [];
+      let tokens = tokenize(exp);
+      tokens.forEach(token => {
+        if (!isNaN(token)) salida.push(token);
+        else if (token === '(') stack.push(token);
+        else if (token === ')') {
+          while (stack.length && stack[stack.length - 1] !== '(') salida.push(stack.pop());
+          stack.pop();
+        } else {
+          while (stack.length && precedencia(stack[stack.length - 1]) >= precedencia(token)) {
+            salida.push(stack.pop());
+          }
+          stack.push(token);
+        }
+      });
+      while (stack.length) salida.push(stack.pop());
+      return salida.join(" ");
+    }
+
+    // ==========================
+    // INF → PRE
+    // ==========================
+    function infijaToPrefija(exp) {
+      let tokens = tokenize(exp).reverse().map(t => (t === '(' ? ')' : t === ')' ? '(' : t));
+      let postfija = infijaToPostfija(tokens.join(" "));
+      return postfija.split(" ").reverse().join(" ");
+    }
+
+    // ==========================
+    // EVALUADORES
+    // ==========================
+    function evalPostfija(exp) {
+      let stack = [];
+      let tokens = exp.split(" ");
+      tokens.forEach(t => {
+        if (!isNaN(t)) stack.push(Number(t));
+        else {
+          let b = stack.pop(), a = stack.pop();
+          switch (t) {
+            case '+': stack.push(a + b); break;
+            case '-': stack.push(a - b); break;
+            case '*': stack.push(a * b); break;
+            case '/': stack.push(a / b); break;
+          }
+        }
+      });
+      return stack.pop();
+    }
+
+    function evalPrefija(exp) {
+      let stack = [];
+      let tokens = exp.split(" ").reverse();
+      tokens.forEach(t => {
+        if (!isNaN(t)) stack.push(Number(t));
+        else {
+          let a = stack.pop(), b = stack.pop();
+          switch (t) {
+            case '+': stack.push(a + b); break;
+            case '-': stack.push(a - b); break;
+            case '*': stack.push(a * b); break;
+            case '/': stack.push(a / b); break;
+          }
+        }
+      });
+      return stack.pop();
+    }
+
+    function evalInfija(exp) {
+      // Seguridad: usar Function en lugar de eval directo
+      return Function(`"use strict"; return (${exp})`)();
+    }
+
+    // ==========================
+    // EVENTO
+    // ==========================
+    btn1.addEventListener("click", () => {
+      arbol.innerHTML = "";
+      let expresion = document.getElementById("expresion").value.trim();
+
+      // Detectar tipo (solo informativo)
+      let tipo = "No válida";
+      if (regexInfija.test(expresion)) tipo = "INFija";
+      else if (regexPrefija.test(expresion)) tipo = "PREfija";
+      else if (regexPostfija.test(expresion)) tipo = "POSTfija";
+
+      // Conversiones (partimos de infija como base)
+      let infija = expresion;
+      let prefija = infijaToPrefija(expresion);
+      let postfija = infijaToPostfija(expresion);
+
+      // Medir tiempo y evaluar
+      const medir = (fn, exp) => {
+        const t0 = performance.now();
+        const res = fn(exp);
+        const t1 = performance.now();
+        return { res, tiempo: (t1 - t0).toFixed(4) };
+      };
+
+      let evalInf = medir(evalInfija, infija);
+      let evalPre = medir(evalPrefija, prefija);
+      let evalPost= medir(evalPostfija, postfija);
+
+      // Render
+      arbol.innerHTML = `
+        <div class="result-box">
+          <p><strong>Tipo detectado:</strong> ${tipo}</p>
+          <p><span class="highlight">Notación Infija:</span> ${infija}</p>
+          <p>Resultado: ${evalInf.res} <br> Tiempo: ${evalInf.tiempo} ms</p>
+        </div>
+        <div class="result-box">
+          <p><span class="highlight">Notación Prefija:</span> ${prefija}</p>
+          <p>Resultado: ${evalPre.res} <br> Tiempo: ${evalPre.tiempo} ms</p>
+        </div>
+        <div class="result-box">
+          <p><span class="highlight">Notación Postfija:</span> ${postfija}</p>
+          <p>Resultado: ${evalPost.res} <br> Tiempo: ${evalPost.tiempo} ms</p>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>

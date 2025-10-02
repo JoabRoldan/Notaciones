@@ -1,0 +1,68 @@
+.card {
+    width: 250px;
+    height: 400px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 2px solid #00bfff; 
+    border-radius: 15px;
+    padding: 10px;
+    transition: all 0.3s ease;
+    overflow: hidden; /* el contenido no se desborde */
+    box-shadow:0 0 20px rgba(0, 191, 255, 0.5);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Para espaciar los elementos dentro de la tarjeta */
+}
+/* para hacer que la carta se haga mas grande al pasar el cursor */
+.card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 25px rgba(0, 191, 255, 0.7);
+}
+
+/* Estilo para la imagen de la carta */
+.card-img img {
+    max-width: 100%;
+    max-height: 180px; /* Limitar la altura de la imagen */
+    object-fit: contain; /* Asegura que la imagen se ajuste sin distorsión */
+    padding: 10px;
+    margin: 0 auto; /* Centra la imagen horizontalmente */
+}
+
+/* Estilo para el título */
+.card-title h3 {
+    color: white;
+    text-align: center;
+    font-size: 1.8rem;
+    text-shadow: 0 0 10px #00bfff; 
+}
+
+/* Estilo para el cuerpo de la tarjeta */
+.card-body {
+    padding: 10px;
+    font-size: 0.9rem;
+    text-align: center;
+    color: #555;
+}
+
+/* Ajustar la altura del contenido del cuerpo */
+.card-body p {
+    margin: 5px 0;
+    line-height: 1.4; 
+    color: #ddd;
+    font-size: 1.2rem;
+    text-shadow: 0 0 5px rgba(0, 191, 255, 0.7);
+
+}
+
+/* Para asegurarse de que las cartas tengan un margen consistente */
+.mb-3 {
+    margin-bottom: 20px;
+}
+/* estilos para el titulo */
+h1 {
+    color: white;
+    font-size: 3rem;
+    text-align: center;
+    text-shadow: 0 0 20px #00bfff; 
+    font-weight: bold;
+    margin-bottom: 40px;
+}
